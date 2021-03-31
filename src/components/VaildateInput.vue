@@ -1,5 +1,5 @@
 <template>
-  <div class="vaildate-input-container pb-3">
+  <div class="validate-input-container pb-3">
     <input
         v-if="tag!=='textarea'"
         class="form-control"
@@ -22,13 +22,19 @@
 </template>
 
 <script lang="ts">
+/*
+  1. 自定义验证规则实现
+  2. 自定义组件v-model的绑定实现
+  3. 绑定到根组件的属性，传入到子元素上
+*/
 import { defineComponent, onMounted, PropType, reactive } from 'vue'
-import { emitter } from './VaildateForm.vue'
+import { emitter } from './VaildateForm.vue' // 导入监听器
 const emailReg = /^[0-9a-zA-z_.-]+[@][0-9a-zA-Z_.-]+([.][0-9a-z]+){1,2}$/
 
 interface RulePorp {
-  type: 'required' | 'email';
+  type: 'required' | 'email' | 'custom';
   message: string;
+  vaildator?: () => boolean;
 }
 
 export type RulesPorp = RulePorp[]
@@ -62,6 +68,9 @@ export default defineComponent({
       // 发射更新事件给根标签更新值
       context.emit('update:modelValue', targetValue)
     }
+    emitter.on('resetInput', () => {
+      inputRef.val = ''
+    })
     // 用于验证输入值是否合法
     const vaildateInput = () => {
       if (props.rules) {
@@ -74,6 +83,8 @@ export default defineComponent({
               break
             case 'email': passed = emailReg.test(inputRef.val)
               break
+            case 'custom': passed = rule.vaildator ? rule.vaildator() : true
+              break
             default:
               break
           }
@@ -85,6 +96,7 @@ export default defineComponent({
       return true
     }
     onMounted(() => {
+      // 发送事件给监听者
       emitter.emit('form-item-created', vaildateInput)
     })
     return {
