@@ -1,6 +1,12 @@
 import { Commit, createStore } from 'vuex'
 import axios from 'axios'
 
+export interface ResponseType <P = {}>{
+  code: number;
+  mes: string;
+  data: P;
+}
+
 export interface UserProps {
   isLogin: boolean;
   nickName?: string;
@@ -8,7 +14,7 @@ export interface UserProps {
   column?: string;
   email?: string;
 }
-interface ImageProps {
+export interface ImageProps {
   _id?: string;
   url?: string;
   createAt?: string;
@@ -29,7 +35,12 @@ export interface PostProps {
   createdAt: string;
   column: string;
 }
+export interface GlobalErrorProps {
+  status: boolean;
+  message?: string;
+}
 export interface GlobalDataProps {
+  error: GlobalErrorProps;
   token: string;
   loading: boolean;
   columns: ColumnProps[];
@@ -55,6 +66,7 @@ async function postAndCommit (url: string, mutationName: string, commit: Commit,
 }
 export default createStore<GlobalDataProps>({
   state: {
+    error: { status: false },
     token: localStorage.getItem('token') || '',
     loading: false,
     columns: [],
@@ -79,6 +91,9 @@ export default createStore<GlobalDataProps>({
     },
     setLoading (state, status) {
       state.loading = status
+    },
+    setError (state, e: GlobalErrorProps) {
+      state.error = e
     },
     fetchCurrentUser (state, rawData) {
       state.user = { isLogin: true, ...rawData.data }
@@ -111,8 +126,9 @@ export default createStore<GlobalDataProps>({
     },
     loginAndFetch ({ dispatch }, loginData) {
       return dispatch('login', loginData).then((res) => {
-        console.log(res)
-        return dispatch('fetchCurrentUser')
+        console.log('login返回了一个promise', res)
+        dispatch('fetchCurrentUser')
+        // return dispatch('fetchCurrentUser')
       })
     }
   },
