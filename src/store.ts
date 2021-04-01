@@ -10,7 +10,7 @@ export interface ResponseType <P = {}>{
 export interface UserProps {
   isLogin: boolean;
   nickName?: string;
-  _id?: number;
+  _id?: string;
   column?: string;
   email?: string;
 }
@@ -27,13 +27,14 @@ export interface ColumnProps {
 
 }
 export interface PostProps {
-  _id: string;
+  _id?: string;
   title: string;
   excerpt?: string;
   content: string;
-  image?: ImageProps;
-  createdAt: string;
+  image?: ImageProps | string;
+  createdAt?: string;
   column: string;
+  author?: string;
 }
 export interface GlobalErrorProps {
   status: boolean;
@@ -130,6 +131,9 @@ export default createStore<GlobalDataProps>({
     },
     login ({ commit }, payload) {
       return postAndCommit('user/login', 'login', commit, payload)
+    },
+    createPost ({ commit }, payload) {
+      return postAndCommit('posts', 'createPost', commit, payload)
     },
     loginAndFetch ({ dispatch }, loginData) {
       return dispatch('login', loginData).then((res) => {

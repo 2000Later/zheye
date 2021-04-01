@@ -1,10 +1,10 @@
 <template>
   <div class="file-upload">
-    <div class="file-upload-container" @click.prevent="triggerUpload">
+    <div v-bind="$attrs" class="file-upload-container" @click.prevent="triggerUpload">
       <slot v-if="fileStatus === 'loading'" name="loading">
         <button class="btn btn-primary" disabled>正在上传</button>
       </slot>
-      <slot v-else-if="fileStatus === 'success'" name="success" :uploadData="uploadData">
+      <slot v-else-if="fileStatus === 'success'" name="uploaded" :uploadData="uploadData">
         <button class="btn btn-primary">上传成功</button>
       </slot>
       <slot v-else name="default">
@@ -41,6 +41,7 @@ export default defineComponent({
       type: Function as PropType<checkFunction>
     }
   },
+  inheritAttrs: false, // 关闭属性绑定到组件根元素上 $attrs
   emits: ['file-upload', 'file-upload-error'],
   setup (props, context) {
     const fileInput = ref<null | HTMLInputElement>(null)
@@ -55,8 +56,14 @@ export default defineComponent({
       const currentTarget = e.target as HTMLInputElement
       if (currentTarget.files) {
         const files = Array.from(currentTarget.files) // 将伪数组转换为array
-        if (props.beforeUpload && !props.beforeUpload(files[0])) return // 如果上传之前的函数存在，并返回false就不在继续执行
-
+        // if (props.beforeUpload && !props.beforeUpload(files[0])) return // 如果上传之前的函数存在，并返回false就不在继续执行
+        console.log('files[0]', files[0])
+        if (props.beforeUpload) {
+          const result = props.beforeUpload(files[0])
+          if (!result) {
+            return
+          }
+        }
         fileStatus.value = 'loading'
         const formDate = new FormData()
         formDate.append('file', files[0])
