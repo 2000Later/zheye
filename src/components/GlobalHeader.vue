@@ -10,7 +10,7 @@
       <dropdown :title="`你好${user.nickName}`">
           <dropdown-item><router-link to="/create" class="dropdown-item">新建文章</router-link></dropdown-item>
           <dropdown-item disabled><a class="dropdown-item" href="#">编辑资料</a></dropdown-item>
-          <dropdown-item><a class="dropdown-item" href="#">退出登录</a></dropdown-item>
+          <dropdown-item><a class="dropdown-item" href="#" @click.prevent="logout">退出登录</a></dropdown-item>
       </dropdown>
     </li>
   </ul>
@@ -20,7 +20,7 @@
 import { defineComponent, PropType } from 'vue'
 import Dropdown from './Dropdown.vue'
 import DropdownItem from './DropdownItem.vue'
-import { UserProps } from '../store'
+import store, { UserProps } from '../store'
 
 export default defineComponent({
   name: 'GlobalHeader',
@@ -28,6 +28,14 @@ export default defineComponent({
     user: {
       type: Object as PropType<UserProps>,
       required: true
+    }
+  },
+  setup () {
+    const logout = () => {
+      store.commit('logout')
+    }
+    return {
+      logout
     }
   },
   components: {

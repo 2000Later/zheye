@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { createRouter, createWebHistory } from 'vue-router'
 import store from './store'
 
@@ -41,6 +42,7 @@ router.beforeEach((to, from, next) => {
   const { requireLogin, redirectAlreadyLogin } = to.meta
   if (!user.isLogin) { // vuex状态数据没有登陆
     if (token) { // vuex中有token就请求用户信息  vuex自动获取localStorage中的token，或者登陆时设置token
+      axios.defaults.headers.Authorization = `Bearer ${token}`
       store.dispatch('fetchCurrentUser').then(() => {
         if (redirectAlreadyLogin) { // 获取到用户信息后 如果跳转的路由需要重定向
           next('/')
@@ -49,7 +51,7 @@ router.beforeEach((to, from, next) => {
         }
       }).catch(err => { // 伪造的token或者网络问题请求失败
         console.error(err)
-        localStorage.removeItem('token')
+        store.commit('logout')
         next('login')
       })
     } else { // 没有token
