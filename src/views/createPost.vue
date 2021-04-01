@@ -1,6 +1,7 @@
 <template>
   <div class="create-post-page">
     <h4>新建文章</h4>
+    <input type="file" name="file" @change.prevent="handleFileChange">
     <vaildate-form @form-submit="onFormSubmit">
       <div class="mb-3">
         <label class="form-label">文章标题：</label>
@@ -37,6 +38,7 @@ import { defineComponent, ref } from 'vue'
 import VaildateForm from '../components/VaildateForm.vue'
 import VaildateInput, { RulesPorp } from '../components/VaildateInput.vue'
 import { GlobalDataProps, PostProps } from '@/store'
+import axios from 'axios'
 export default defineComponent({
   setup () {
     const router = useRouter()
@@ -66,12 +68,30 @@ export default defineComponent({
         }
       }
     }
+    const handleFileChange = (e: Event) => {
+      const target = e.target as HTMLInputElement
+      const files = target.files
+      if (files) {
+        const uploadFile = files[0]
+        const formDate = new FormData()
+        formDate.append(uploadFile.name, uploadFile)
+        axios.post('/api/upload', formDate, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+          // http://vue-maker.oss-cn-hangzhou.aliyuncs.com/vue-marker/6063310f9c7ab1263babb539.jpg
+        }).then((res: any) => {
+          console.log(res)
+        })
+      }
+    }
     return {
       titleValue,
       titleRules,
       contentVal,
       contentRules,
-      onFormSubmit
+      onFormSubmit,
+      handleFileChange
     }
   },
   components: {
