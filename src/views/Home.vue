@@ -11,17 +11,6 @@
         </div>
       </div>
     </section>
-    <uploader action="/api/upload" :beforeUpload="beforeUpload" @file-upload="onFileUpload">
-      <template #success="slotScope">
-        {{slotScope}}
-        <img :src="slotScope.uploadData.data.url" alt="">
-      </template>
-      <template #loading>
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </template>
-    </uploader>
     <h4 class="font-weight-bold text-center">发现精彩</h4>
     <column-list :list="list"></column-list>
   </div>
@@ -31,9 +20,7 @@
 import { defineComponent, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import ColumnList from '@/components/ColumnList.vue'
-import Uploader from '@/components/Uploader.vue'
-import { GlobalDataProps, ResponseType, ImageProps } from '../store'
-import createMessage from '@/components/createMessage'
+import { GlobalDataProps } from '../store'
 
 export default defineComponent({
   setup () {
@@ -43,28 +30,13 @@ export default defineComponent({
     })
     const list = computed(() => store.state.columns)
     const biggerColumnsLen = computed(() => store.getters.biggerColumnsLen)
-    const beforeUpload = (file: File) => {
-      console.log(file)
-      const isPng = (file.type === 'image/png')
-      console.log(isPng)
-      if (!isPng) { // 如果不是png 就给个提示
-        createMessage('上传的图片只能是 PNG 格式！', 'error')
-      }
-      return isPng
-    }
-    const onFileUpload = (rowDate: ResponseType<ImageProps>) => {
-      createMessage(`上传的文件ID${rowDate.data._id}`, 'success')
-    }
     return {
       list,
-      biggerColumnsLen,
-      beforeUpload,
-      onFileUpload
+      biggerColumnsLen
     }
   },
   components: {
-    ColumnList,
-    Uploader
+    ColumnList
   }
 
 })
