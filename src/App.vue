@@ -36,15 +36,7 @@ export default defineComponent({
     const store = useStore<GlobalDataProps>()
     const currentUser = computed(() => store.state.user)
     const isLoading = computed(() => store.state.loading)
-    const token = computed(() => store.state.token)
     const error = computed(() => store.state.error)
-    onMounted(() => {
-      // 没有登陆并且token存在 就获取用户信息数据
-      if (!currentUser.value.isLogin && token.value) {
-        axios.defaults.headers.common.Authorization = `Bearer ${token.value}`
-        store.dispatch('fetchCurrentUser')
-      }
-    })
     // watch第一个参数希望是个对象类型 函数也是对象
     watch(() => error.value.status, () => {
       const { status, message } = error.value
