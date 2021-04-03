@@ -1,6 +1,14 @@
 import { ColumnProps } from '@/store'
 export const generateFitUrl = (column: ColumnProps, width: number, height: number) => {
   console.log(column, width, height)
+  if (column.avatar) {
+    column.avatar.fitUrl = column.avatar.url + '??x-oss-process=image/resize,m_fixed,h_50,w_50'
+  } else {
+    column.avatar = {
+      fitUrl: require('@/assets/column.jpg')
+    }
+  }
+  return column
 }
 
 interface CheckCodition {
