@@ -1,5 +1,11 @@
 <template>
 <div class="posts-detail-page">
+    <Modal title="删除文章"
+    :visible="modalIsVisible"
+    @modal-on-close="modalIsVisible = false"
+    @modal-on-confirm="modalIsVisible = false">
+      <p>你确认要删除该文章吗？</p>
+      </Modal>
     <article class="w-75 mx-auto mb-5 pb-3" v-if="currentPost">
         <img :src="currentImageUrl" :alt="currentPost.titie" class="rounded-lg img-flund my-4" v-if="currentPost">
         <h2 class="mb-4">{{currentPost.title}}</h2>
@@ -12,7 +18,7 @@
         <div v-html="currentHTML"></div>
         <div v-if="showEditArea" class="btn_group mt-5">
           <router-link type="button" class="btn btn-success" :to="{name: 'create', query: { id: currentPost._id }}">编辑</router-link>
-          <button type="button" class="btn btn-danger">删除</button>
+          <button type="button" class="btn btn-danger" @click.prevent="modalIsVisible = true">删除</button>
         </div>
     </article>
 </div>
@@ -20,19 +26,23 @@
 
 <script lang="ts">
 import { useRoute } from 'vue-router'
-import { defineComponent, onMounted, computed } from 'vue'
+import { defineComponent, onMounted, computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import { GlobalDataProps, ImageProps, PostProps, UserProps } from '@/store'
 import MarkDownIt from 'markdown-it'
 import UserPorfile from '@/components/UserProfile.vue'
+import Modal from '@/components/Modal.vue'
+
 // 文章权限一般对比文章author中的id和用户信息的id
 export default defineComponent({
   components: {
-    UserPorfile
+    UserPorfile,
+    Modal
   },
   setup () {
     const store = useStore<GlobalDataProps>()
     const route = useRoute()
+    const modalIsVisible = ref(false)
     const currentId = route.params.id
     const md = new MarkDownIt()
     onMounted(() => {
@@ -67,7 +77,8 @@ export default defineComponent({
       currentPost,
       currentImageUrl,
       currentHTML,
-      showEditArea
+      showEditArea,
+      modalIsVisible
     }
   }
 })
