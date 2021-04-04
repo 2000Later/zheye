@@ -4,7 +4,8 @@
     <uploader action="/api/upload"
     class="d-flex align-items-center justify-content-center bg-light text-secondary w-100 my-4"
     :beforeUpload="uploadCheck"
-    @file-upload="handleFileUploaded">
+    @file-upload="handleFileUploaded"
+    :updated="updateData">
       <h2>点击上传头图</h2>
       <template #loading>
        <div class="f-flex">
@@ -16,7 +17,7 @@
        </div>
       </template>
       <template #uploaded="dataProps">
-        <img :src="dataProps.uploadData.data.url" alt="">
+        <img :src="dataProps.uploadedData.data.url" alt="">
       </template>
     </uploader>
     <!-- <input type="file" name="file" @change.prevent="handleFileChange"> -->
@@ -50,10 +51,9 @@
 </template>
 
 <script lang="ts">
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import axios from 'axios'
-import { defineComponent, ref } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import VaildateForm from '../components/VaildateForm.vue'
 import VaildateInput, { RulesPorp } from '../components/VaildateInput.vue'
 import Uploader from '@/components/Uploader.vue'
@@ -63,7 +63,10 @@ import createMessage from '@/components/createMessage'
 
 export default defineComponent({
   setup () {
+    const updateData = ref()
     const router = useRouter()
+    const route = useRoute()
+    const isEditMode = !!route.query.id // 转换为布尔类型
     const store = useStore<GlobalDataProps>()
     const titleValue = ref('')
     const titleRules: RulesPorp = [
@@ -73,6 +76,16 @@ export default defineComponent({
     const contentRules: RulesPorp = [
       { type: 'required', message: '文章详情不能为空' }
     ]
+    onMounted(() => {
+      if (isEditMode) { // 如果是编辑操作，就请求最新的数据
+        store.dispatch('fetchPost', route.query.id).then((rawData: ResponseType<PostProps>) => {
+          const currentPost = rawData.data
+          if (currentPost.image) {
+            updateData.value = { data: currentPost.image }
+          }
+        })
+      }
+    })
     let imageId = ''
     // 上传文件成功后的处理函数
     const handleFileUploaded = (rawData: ResponseType<ImageProps>) => {
@@ -106,7 +119,6 @@ export default defineComponent({
     }
     const uploadCheck = (file: File) => {
       const { passed, error } = beforeUploadCheck(file, { format: ['image/jpeg', 'image/png'], size: 1 })
-      console.log(passed, error)
       if (error === 'format') {
         createMessage('上传的图片只能是 JPG/PNG 格式！', 'error')
       }
@@ -122,7 +134,8 @@ export default defineComponent({
       contentRules,
       onFormSubmit,
       uploadCheck,
-      handleFileUploaded
+      handleFileUploaded,
+      updateData
     }
   },
   components: {

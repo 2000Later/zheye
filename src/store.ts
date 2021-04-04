@@ -1,5 +1,5 @@
 import { Commit, createStore } from 'vuex'
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 
 export interface ResponseType <P = {}>{
   code: number;
@@ -13,7 +13,10 @@ export interface UserProps {
   _id?: string;
   column?: string;
   email?: string;
+  avatar?: ImageProps;
+  description?: string;
 }
+
 export interface ImageProps {
   _id?: string;
   url?: string;
@@ -25,7 +28,6 @@ export interface ColumnProps {
   title: string;
   avatar?: ImageProps;
   description: string;
-
 }
 export interface PostProps {
   _id?: string;
@@ -35,7 +37,7 @@ export interface PostProps {
   image?: ImageProps | string;
   createdAt?: string;
   column: string;
-  author?: string;
+  author?: string | UserProps;
 }
 export interface GlobalErrorProps {
   status: boolean;
@@ -67,6 +69,14 @@ async function postAndCommit (url: string, mutationName: string, commit: Commit,
   commit(mutationName, data)
   return data
 }
+
+// 重构请求方法
+const asyncAndCommit = async (url: string, mutationName: string, commit: Commit, config: AxiosRequestConfig = { method: 'get' }) => {
+  const { data } = await axios(url, config)
+  commit(mutationName, data)
+  return data
+}
+
 export default createStore<GlobalDataProps>({
   state: {
     error: { status: false },
@@ -91,6 +101,18 @@ export default createStore<GlobalDataProps>({
     },
     fetchPosts (state, rawData) {
       state.posts = rawData.data.list
+    },
+    fetchPost (state, rawData) {
+      state.posts = [rawData.data]
+    },
+    updatePost (state, { data }) {
+      state.posts = state.posts.map((post) => {
+        if (post._id === data._id) {
+          return data
+        } else {
+          return post
+        }
+      })
     },
     setLoading (state, status) {
       state.loading = status
@@ -127,6 +149,15 @@ export default createStore<GlobalDataProps>({
     fetchPosts ({ commit }, cid) {
       getAndCommit(`columns/${cid}/posts`, 'fetchPosts', commit)
     },
+    fetchPost ({ commit }, id) {
+      return getAndCommit(`/posts/${id}`, 'fetchPost', commit)
+    },
+    updatePost ({ commit }, { id, payload }) {
+      return asyncAndCommit(`posts${id}`, 'updatePost', commit, {
+        method: 'patch',
+        data: payload
+      })
+    },
     fetchCurrentUser ({ commit }) {
       return getAndCommit('user/current', 'fetchCurrentUser', commit)
     },
@@ -149,6 +180,9 @@ export default createStore<GlobalDataProps>({
       return state.columns.filter(c => +c._id > 2).length
     },
     getColumnById: (state) => (id: string) => state.columns.find(c => c._id === id),
-    getPostsById: (state) => (cid: string) => state.posts.filter(post => post.column === cid)
+    getPostsById: (state) => (cid: string) => state.posts.filter(post => post.column === cid),
+    getCurrentPost (state) {
+      return (id: string) => state.posts.find(c => c._id === id)
+    }
   }
 })

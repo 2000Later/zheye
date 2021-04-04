@@ -38,8 +38,6 @@ export default defineComponent({
       return selecColumn
     })
     const list = computed(() => store.getters.getPostsById(currentId))
-    console.log(list)
-    // console.log(column, list)
     return {
       column,
       list
