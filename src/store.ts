@@ -72,7 +72,7 @@ async function postAndCommit (url: string, mutationName: string, commit: Commit,
 
 // 重构请求方法
 const asyncAndCommit = async (url: string, mutationName: string, commit: Commit, config: AxiosRequestConfig = { method: 'get' }) => {
-  const { data } = await axios(url, config)
+  const { data } = await axios(`/api/${url}`, config)
   commit(mutationName, data)
   return data
 }
@@ -153,7 +153,8 @@ export default createStore<GlobalDataProps>({
       return getAndCommit(`/posts/${id}`, 'fetchPost', commit)
     },
     updatePost ({ commit }, { id, payload }) {
-      return asyncAndCommit(`posts${id}`, 'updatePost', commit, {
+      console.log('payload', payload)
+      return asyncAndCommit(`/posts/${id}`, 'updatePost', commit, {
         method: 'patch',
         data: payload
       })
