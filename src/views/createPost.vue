@@ -27,7 +27,7 @@
         <vaildate-input
           type='text'
           :rules="titleRules"
-          v-model="titleValue"
+          v-model="titleVal"
           placeholder="请输入文章标题"
          >
         </vaildate-input>
@@ -68,7 +68,7 @@ export default defineComponent({
     const route = useRoute()
     const isEditMode = !!route.query.id // 转换为布尔类型
     const store = useStore<GlobalDataProps>()
-    const titleValue = ref('')
+    const titleVal = ref('')
     const titleRules: RulesPorp = [
       { type: 'required', message: '文章标题不能为空' }
     ]
@@ -83,6 +83,8 @@ export default defineComponent({
           if (currentPost.image) {
             updateData.value = { data: currentPost.image }
           }
+          titleVal.value = currentPost.title
+          contentVal.value = currentPost.content
         })
       }
     })
@@ -99,7 +101,7 @@ export default defineComponent({
         const { column, _id } = store.state.user
         if (column) {
           const newPost: PostProps = {
-            title: titleValue.value,
+            title: titleVal.value,
             content: contentVal.value,
             column,
             author: _id
@@ -128,7 +130,7 @@ export default defineComponent({
       return passed
     }
     return {
-      titleValue,
+      titleVal,
       titleRules,
       contentVal,
       contentRules,

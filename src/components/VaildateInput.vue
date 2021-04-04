@@ -5,16 +5,14 @@
         class="form-control"
         :class="{'is-invalid ': inputRef.error}"
         @blur="vaildateInput"
-        :value="inputRef.val"
-        @input="updateValue"
+        v-model="inputRef.val"
         v-bind="$attrs"/>
     <textarea
       v-else
       class="form-control"
       :class="{'is-invalid ': inputRef.error}"
       @blur="vaildateInput"
-      :value="inputRef.val"
-      @input="updateValue"
+      v-model="inputRef.val"
       v-bind="$attrs">
     </textarea>
     <span v-if="inputRef.error" class="invalid-feedback" >{{inputRef.message}}</span>
@@ -27,7 +25,7 @@
   2. 自定义组件v-model的绑定实现
   3. 绑定到根组件的属性，传入到子元素上
 */
-import { defineComponent, onMounted, PropType, reactive } from 'vue'
+import { computed, defineComponent, onMounted, PropType, reactive, watch } from 'vue'
 import { emitter } from './VaildateForm.vue' // 导入监听器
 const emailReg = /^[0-9a-zA-z_.-]+[@][0-9a-zA-Z_.-]+([.][0-9a-z]+){1,2}$/
 
@@ -55,19 +53,29 @@ export default defineComponent({
   setup (props, context) {
     // console.log(context.attrs) // 在通过v-bind="$attrs" 绑定到根组件传入属性，的子元素上
     const inputRef = reactive({
-      val: props.modelValue || '',
+      val: computed({
+        get: () => props.modelValue || '',
+        set: val => {
+          context.emit('update:modelValue', val)
+        }
+      }),
       error: false,
       message: ''
     })
-    // 用于实现根组件双向绑定 v-model
-    const updateValue = (e: KeyboardEvent) => {
-      // 获取input value值
-      const targetValue = (e.target as HTMLInputElement).value
-      // 将input值给 当inputRef便于验证
-      inputRef.val = targetValue
-      // 发射更新事件给根标签更新值
-      context.emit('update:modelValue', targetValue)
-    }
+    // watch(() => props.modelValue, (newVal) => {
+    //   console.log('watch triggered')
+    //   inputRef.val = newVal || ''
+    // })
+    // // 用于实现根组件双向绑定 v-model
+    // const updateValue = (e: KeyboardEvent) => {
+    //   console.log('update triggered')
+    //   // 获取input value值
+    //   const targetValue = (e.target as HTMLInputElement).value
+    //   // 将input值给 当inputRef便于验证
+    //   inputRef.val = targetValue
+    //   // 发射更新事件给根标签更新值
+    //   context.emit('update:modelValue', targetValue)
+    // }
     emitter.on('resetInput', () => {
       inputRef.val = ''
     })
@@ -101,8 +109,7 @@ export default defineComponent({
     })
     return {
       inputRef,
-      vaildateInput,
-      updateValue
+      vaildateInput
     }
   }
 })
