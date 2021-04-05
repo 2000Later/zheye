@@ -28,11 +28,9 @@ export default defineComponent({
     onMounted(() => {
       store.dispatch('fetchColumns')
     })
-    const list = computed(() => store.state.columns)
-    const biggerColumnsLen = computed(() => store.getters.biggerColumnsLen)
+    const list = computed(() => store.getters.getColumns)
     return {
-      list,
-      biggerColumnsLen
+      list
     }
   },
   components: {
