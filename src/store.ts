@@ -105,6 +105,9 @@ export default createStore<GlobalDataProps>({
     fetchPost (state, rawData) {
       state.posts = [rawData.data]
     },
+    deletePost (state, { data }) {
+      state.posts = state.posts.filter(post => post._id !== data._id)
+    },
     updatePost (state, { data }) {
       state.posts = state.posts.map((post) => {
         if (post._id === data._id) {
@@ -153,7 +156,6 @@ export default createStore<GlobalDataProps>({
       return getAndCommit(`/posts/${id}`, 'fetchPost', commit)
     },
     updatePost ({ commit }, { id, payload }) {
-      console.log('payload', payload)
       return asyncAndCommit(`/posts/${id}`, 'updatePost', commit, {
         method: 'patch',
         data: payload
@@ -167,6 +169,9 @@ export default createStore<GlobalDataProps>({
     },
     createPost ({ commit }, payload) {
       return postAndCommit('posts', 'createPost', commit, payload)
+    },
+    deletePost ({ commit }, id) {
+      return asyncAndCommit(`posts${id}`, 'deletePost', commit, { method: 'delete' })
     },
     loginAndFetch ({ dispatch }, loginData) {
       return dispatch('login', loginData).then((res) => {
