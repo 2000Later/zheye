@@ -6,14 +6,16 @@
           <img src="../assets/callout.svg" alt="callout" class="w-50" />
           <h2 class="font-weight-light">随心写作，自由表达</h2>
           <p>
-            <a href="#" class="btn btn-primary my-2">开始写文章</a>
+            <router-link to="/create" class="btn btn-primary my-2">开始写文章</router-link>
           </p>
         </div>
       </div>
     </section>
     <h4 class="font-weight-bold text-center">发现精彩</h4>
     <column-list :list="list"></column-list>
-    <button class="btn btn-outline-primary mt-2 mb-5 mx-auto d-block w-25" @click="loadMorePage" v-if="!isLastPage" >加载更多</button>
+    <button class="btn btn-outline-primary mt-2 mb-5 mx-auto d-block w-25"
+    @click="loadMorePage"
+    v-if="!isLastPage" >加载更多</button>
   </div>
 </template>
 
@@ -28,11 +30,12 @@ export default defineComponent({
   setup () {
     const store = useStore<GlobalDataProps>()
     const total = computed(() => store.state.columns.total)
+    const currentPage = computed(() => store.state.columns.currentPage)
     onMounted(() => {
       store.dispatch('fetchColumns', { pageSize: 3 })
     })
     const list = computed(() => store.getters.getColumns)
-    const { loadMorePage, isLastPage } = useLoadMore('fetchColumns', total, { pageSize: 3, currentPage: 2 })
+    const { loadMorePage, isLastPage } = useLoadMore('fetchColumns', total, { pageSize: 3, currentPage: (currentPage.value ? currentPage.value + 1 : 2) })
     return {
       list,
       loadMorePage,

@@ -52,8 +52,8 @@ export interface GlobalDataProps {
   error: GlobalErrorProps;
   token: string;
   loading: boolean;
-  columns: { data: ListProps<ColumnProps>; isLoaded: boolean; total: number };
-  posts: { data: ListProps<PostProps>; loadedColumns: string[] };
+  columns: { data: ListProps<ColumnProps>; currentPage: number; total: number };
+  posts: { data: ListProps<PostProps>; loadedColumns: ListProps<{total: number; currentPage: number}> };
   user: UserProps;
 }
 async function getAndCommit (url: string, mutationName: string, commit: Commit) {
@@ -92,8 +92,8 @@ export default createStore<GlobalDataProps>({
     error: { status: false },
     token: localStorage.getItem('token') || '',
     loading: false,
-    columns: { data: {}, isLoaded: false, total: 0 },
-    posts: { data: {}, loadedColumns: [] },
+    columns: { data: {}, currentPage: 0, total: 0 },
+    posts: { data: {}, loadedColumns: {} },
     user: { isLogin: false }
   },
   mutations: {
@@ -106,12 +106,12 @@ export default createStore<GlobalDataProps>({
     },
     fetchColumns (state, rawData) {
       const { data } = state.columns
-      const { list, count } = rawData.data
+      const { list, count, currentPage } = rawData.data
       // console.log(list)
       state.columns = {
         data: { ...data, ...arrToObj(list) },
         total: count,
-        isLoaded: true
+        currentPage: currentPage * 1
       }
       // state.columns.data = arrToObj(rawData.data.list)
       // state.columns.isLoaded = true
@@ -121,9 +121,14 @@ export default createStore<GlobalDataProps>({
       state.columns.data[rawData.data._id] = rawData.data
     },
     fetchPosts (state, { data: rawData, extraData: columnId }) {
+      console.log(state.posts.loadedColumns)
+      const { list, count, currentPage } = rawData.data
       // state.posts = rawData.data.list
-      state.posts.data = { ...state.posts.data, ...arrToObj(rawData.data.list) }
-      state.posts.loadedColumns.push(columnId)
+      state.posts.data = { ...state.posts.data, ...arrToObj(list) }
+      state.posts.loadedColumns[columnId] = {
+        total: count,
+        currentPage: currentPage * 1
+      }
     },
     fetchPost (state, rawData) {
       // state.posts = [rawData.data]
@@ -168,14 +173,13 @@ export default createStore<GlobalDataProps>({
   actions: {
     // 获取全部专栏
     fetchColumns ({ state, commit }, params = {}) {
-      // axios.get('/api/columns').then(res => {
-      //   commit('fetchColumns', res.data)
-      // })
       // if (!state.columns.isLoaded) {
       //   getAndCommit('columns', 'fetchColumns', commit)
       // }
       const { currentPage = 1, pageSize = 6 } = params
-      return asyncAndCommit(`columns/?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit)
+      if (state.columns.currentPage < currentPage) {
+        return asyncAndCommit(`columns/?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit)
+      }
     },
     // 获取单个专栏
     fetchColumn ({ state, commit }, cid) {
@@ -184,9 +188,17 @@ export default createStore<GlobalDataProps>({
       }
     },
     // 获取文章列表
-    fetchPosts ({ state, commit }, cid) {
-      if (!state.posts.loadedColumns.includes(cid)) { // loadedColumns 没有cid就去请求
-        return asyncAndCommit(`columns/${cid}/posts`, 'fetchPosts', commit, { method: 'get' }, cid)
+    fetchPosts ({ state, commit }, { cid, pageSize, currentPage = 1 }) {
+      // if (!state.posts.loadedColumns.cid) { // loadedColumns 没有cid就去请求
+      //   return asyncAndCommit(`columns/${cid}/posts?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchPosts', commit, { method: 'get' }, cid)
+      // }
+      const currentPost = state.posts.loadedColumns[cid]
+      console.log(!currentPost || currentPost.currentPage < currentPage)
+      if (!currentPost || currentPost.currentPage < currentPage) {
+        return asyncAndCommit(`columns/${cid}/posts?currentPage=${currentPage}&pageSize=${pageSize}`,
+          'fetchPosts', commit, { method: 'get' }, cid)
+      } else {
+        return Promise.resolve({ data: currentPost })
       }
     },
     // 获取单个文章
