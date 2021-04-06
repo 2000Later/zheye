@@ -18,7 +18,7 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(config => {
   setTimeout(() => {
     store.commit('setLoading', false)
-  }, 1000)
+  }, 500)
   return config
 }, err => {
   const { error } = err.response.data

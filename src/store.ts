@@ -52,7 +52,7 @@ export interface GlobalDataProps {
   error: GlobalErrorProps;
   token: string;
   loading: boolean;
-  columns: { data: ListProps<ColumnProps>; isLoaded: boolean };
+  columns: { data: ListProps<ColumnProps>; isLoaded: boolean; total: number };
   posts: { data: ListProps<PostProps>; loadedColumns: string[] };
   user: UserProps;
 }
@@ -92,7 +92,7 @@ export default createStore<GlobalDataProps>({
     error: { status: false },
     token: localStorage.getItem('token') || '',
     loading: false,
-    columns: { data: {}, isLoaded: false },
+    columns: { data: {}, isLoaded: false, total: 0 },
     posts: { data: {}, loadedColumns: [] },
     user: { isLogin: false }
   },
@@ -105,8 +105,16 @@ export default createStore<GlobalDataProps>({
       state.posts.data[newPost._id] = newPost
     },
     fetchColumns (state, rawData) {
-      state.columns.data = arrToObj(rawData.data.list)
-      state.columns.isLoaded = true
+      const { data } = state.columns
+      const { list, count } = rawData.data
+      // console.log(list)
+      state.columns = {
+        data: { ...data, ...arrToObj(list) },
+        total: count,
+        isLoaded: true
+      }
+      // state.columns.data = arrToObj(rawData.data.list)
+      // state.columns.isLoaded = true
     },
     fetchColumn (state, rawData) {
       // state.columns = [rawData.data]
@@ -159,13 +167,15 @@ export default createStore<GlobalDataProps>({
   },
   actions: {
     // 获取全部专栏
-    fetchColumns ({ state, commit }) {
+    fetchColumns ({ state, commit }, params = {}) {
       // axios.get('/api/columns').then(res => {
       //   commit('fetchColumns', res.data)
       // })
-      if (!state.columns.isLoaded) {
-        getAndCommit('columns', 'fetchColumns', commit)
-      }
+      // if (!state.columns.isLoaded) {
+      //   getAndCommit('columns', 'fetchColumns', commit)
+      // }
+      const { currentPage = 1, pageSize = 6 } = params
+      return asyncAndCommit(`columns/?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit)
     },
     // 获取单个专栏
     fetchColumn ({ state, commit }, cid) {
